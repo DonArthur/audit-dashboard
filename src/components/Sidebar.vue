@@ -3,15 +3,21 @@
         <ul class="nav flex-column">
             <li class="nav-item">
                 <!-- semua -->
-                <router-link class="nav-link text-white" active-class="active bg-primary rounded" exact to="/">Beranda</router-link>
+                <router-link class="nav-link text-white d-flex gap-2" active-class="active bg-primary rounded" exact to="/">
+                    <i class="bi bi-pie-chart-fill"></i>Beranda
+                </router-link>
             </li>
             <li class="nav-item">
                 <!-- buat admin -->
-                <router-link class="nav-link text-white" active-class="active bg-primary rounded" exact to="/pengaturan-kuesioner">Pengaturan Kuesioner</router-link>
+                <router-link class="nav-link text-white d-flex gap-2" active-class="active bg-primary rounded" exact to="/pengaturan-kuesioner">
+                    <i class="bi bi-pie-chart-fill"></i>Pengaturan Kuesioner
+                </router-link>
             </li>
             <li class="nav-item">
                 <!-- buat auditor -->
-                <router-link class="nav-link text-white" active-class="active bg-primary rounded" exact to="/isi-kuesioner">Isi Kuesioner</router-link>
+                <router-link class="nav-link text-white d-flex gap-2" active-class="active bg-primary rounded" exact to="/isi-kuesioner">
+                    <i class="bi bi-pie-chart-fill"></i>Isi Kuesioner
+                </router-link>
             </li>
         </ul>
     </nav>
