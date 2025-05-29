@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>ISI KUESIONER</h1>
+        <h3>ISI KUESIONER</h3>
         <div>
             <p>Isi nama perusahaan</p>
             <p>Pilih direktorat</p>

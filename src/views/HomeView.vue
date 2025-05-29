@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <h1>BERANDA</h1>
+    <h3>BERANDA</h3>
     <div>
       Komponen card masing-masing direktorat dan skornya (di atas)
     </div>

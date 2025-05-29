@@ -1,7 +1,7 @@
 <template>
   <div id="app" class="d-flex">
     <Sidebar />
-    <main class="flex-grow-1 bg-light p-4 overflow-auto" style="margin-left: 250px;">
+    <main class="flex-grow-1 bg-light p-4 overflow-auto" style="margin-left: 250px; width: calc(98vw - 250px);">
       <router-view/>
     </main>
   </div>

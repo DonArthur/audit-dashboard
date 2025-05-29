@@ -1,6 +1,6 @@
 <template>
     <div>
-        <h1>PENGATURAN KUESIONER</h1>
+        <h3>PENGATURAN KUESIONER</h3>
         <button @click="addQuestion">TAMBAH PERTANYAAN</button>
         <p>TABEL PERTANYAAN</p>
         {{ pertanyaan }}
