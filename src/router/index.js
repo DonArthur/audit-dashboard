@@ -13,6 +13,11 @@ const routes = [
     component: () => import('../views/PengaturanKuesioner.vue')
   },
   {
+    path: '/pengaturan-kategori',
+    name: 'pengaturan-kategori',
+    component: () => import('../views/PengaturanKategori.vue')
+  },
+  {
     path: '/isi-kuesioner',
     name: 'isi-kuesioner',
     component: () => import('../views/IsiKuesioner.vue')

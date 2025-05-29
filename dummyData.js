@@ -3,23 +3,23 @@
 export const users = [
     {
         id: 0,
-        userName: 'doohan',
-        pwd: 'doohan',
-        fullName: 'Duhan Maulana Artline',
+        userName: 'root',
+        pwd: 'root',
+        fullName: 'Duhan Maulana Artline (Admin)',
         role: 0,
     },
     {
         id: 1,
-        userName: 'feraw',
-        pwd: 'feraw',
-        fullName: 'Fera Widyawati',
+        userName: 'auditor',
+        pwd: 'auditor',
+        fullName: 'Duhan Maulana Artline (Auditor)',
         role: 1,
     },
     {
         id: 2,
-        userName: 'geraldm',
-        pwd: 'geraldm',
-        fullName: 'Geraldy Miero',
+        userName: 'user',
+        pwd: 'user',
+        fullName: 'Duhan Maulana Artline (User)',
         role: 2,
     },
 ]
