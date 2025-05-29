@@ -3,21 +3,24 @@
         <h1>PENGATURAN KUESIONER</h1>
         <button>TAMBAH PERTANYAAN</button>
         <p>TABEL PERTANYAAN</p>
-        <span><b>cek</b> CERITANYA BARIS PERTANYAAN <b>EDIT PERTANYAAN</b><b>HAPUS PERTANYAAN</b></span>
-        <span><b>cek</b> CERITANYA BARIS PERTANYAAN <b>EDIT PERTANYAAN</b><b>HAPUS PERTANYAAN</b></span>
-        <span><b>cek</b> CERITANYA BARIS PERTANYAAN <b>EDIT PERTANYAAN</b><b>HAPUS PERTANYAAN</b></span>
-        <span><b>cek</b> CERITANYA BARIS PERTANYAAN <b>EDIT PERTANYAAN</b><b>HAPUS PERTANYAAN</b></span>
-        <span><b>cek</b> CERITANYA BARIS PERTANYAAN <b>EDIT PERTANYAAN</b><b>HAPUS PERTANYAAN</b></span>
-        <span><b>cek</b> CERITANYA BARIS PERTANYAAN <b>EDIT PERTANYAAN</b><b>HAPUS PERTANYAAN</b></span>
-        <span><b>cek</b> CERITANYA BARIS PERTANYAAN <b>EDIT PERTANYAAN</b><b>HAPUS PERTANYAAN</b></span>
-        <span><b>cek</b> CERITANYA BARIS PERTANYAAN <b>EDIT PERTANYAAN</b><b>HAPUS PERTANYAAN</b></span>
-        <span><b>cek</b> CERITANYA BARIS PERTANYAAN <b>EDIT PERTANYAAN</b><b>HAPUS PERTANYAAN</b></span>
-        <span><b>cek</b> CERITANYA BARIS PERTANYAAN <b>EDIT PERTANYAAN</b><b>HAPUS PERTANYAAN</b></span>
+        {{ pertanyaan }}
     </div>
 </template>
 <script>
+import { db } from '../../firebaseConfig';
+import { collection, getDocs } from 'firebase/firestore';
+
 export default {
     name: 'PengaturanKuesioner',
+    data() {
+        return {
+            pertanyaan: [],
+        }
+    },
+    async mounted() {
+        const querySnapShot = await getDocs(collection(db, 'pertanyaan'))
+        this.pertanyaan = querySnapShot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    },
 }
 </script>
 <style></style>
