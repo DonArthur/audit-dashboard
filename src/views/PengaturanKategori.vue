@@ -161,7 +161,7 @@
                         <button
                             :class="`btn bg-${computedDisabledSave ? 'secondary' : 'primary'} text-white rounded`"
                             :disabled="computedDisabledSave"
-                            @click="confirmSave"
+                            @click="addCategory"
                         >
                             SIMPAN
                         </button>
@@ -170,7 +170,7 @@
             </div>
         </div>
         <div
-            class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3"
+            :class="`toast align-items-center ${requestSuccess ? 'text-bg-primary' : 'text-bg-danger'} border-0 position-fixed top-0 start-50 translate-middle-x m-3`"
             role="alert"
             aria-live="assertive"
             aria-atomic="true"
@@ -186,7 +186,7 @@
     </div>
 </template>
 <script>
-import { Modal } from 'bootstrap';
+import { Modal, Toast } from 'bootstrap';
 import 'vue-good-table-next/dist/vue-good-table-next.css'
 import { VueGoodTable } from 'vue-good-table-next'
 import { db } from '../../firebaseConfig';
@@ -209,6 +209,7 @@ export default {
             },
             title: '',
             toastMessage: '',
+            requestSuccess: false,
             toastInstance: null,
             kolom_direktorat: [
                 {
@@ -434,30 +435,36 @@ export default {
         async addCategory() {
             let category = ''
             let newData = null
+            let isDuplicate = false
             switch (this.title) {
                 case 'DIREKTORAT':
                     category = 'direktorat'
                     newData = this.form_direktorat
+                    isDuplicate = this.hasDuplicate(newData.nama_direktorat, 'direktorat', 'nama_direktorat')
                     this.form_direktorat = { id: newData.id + 1, nama_direktorat: '' }
                     break
                 case 'KLAUSUL':
-                    category = klausa
+                    category = 'klausa'
                     newData = this.form_klausa
+                    isDuplicate = this.hasDuplicate(newData.nama_klausa, 'klausa', 'nama_klausa')
                     this.form_klausa = { id: newData.id + 1, nama_klausa: '' }
                     break
                 case 'SUB-KLAUSUL':
                     category = 'sub_klausa'
                     newData = this.form_sub_klausa
+                    isDuplicate = this.hasDuplicate(newData.nama_sub_klausa, 'sub_klausa', 'nama_sub_klausa')
                     this.form_sub_klausa = { id: newData.id, nama_sub_klausa: '' }
                     break
                 case 'ANNEX':
-                    category = annex
+                    category = 'annex'
                     newData = this.form_annex
+                    isDuplicate = this.hasDuplicate(newData.nama_annex, 'annex', 'nama_annex')
                     this.form_annex = { id: newData.id, nama_annex: '' }
                     break
                 case 'KONTROL':
                     category = 'sub_control'
                     newData = this.form_kontrol
+                    isDuplicate = this.hasDuplicate(newData.nama_sub_control, 'sub_control', 'nama_sub_control')
                     this.form_kontrol = { id: newData.id, nama_sub_control: '' }
                     break
                 case 'SKOR':
@@ -468,33 +475,30 @@ export default {
                 default:
                     break
             }
-            if (!this.hasDuplicate(newData, category)) {
-                this.showToast('Aman')
+            if (isDuplicate) {
+                this.requestSuccess = false
+                this.showToast('Data sudah ada')
+            } else {
                 await addDoc(collection(db, category), newData).then(() => {
                     const addModalEl = document.getElementById('addModal')
                     const addModal = Modal.getInstance(addModalEl) || new Modal(addModalEl)
                     addModal.hide()
+                    this.requestSuccess = true
+                    this.showToast('Data berhasil disimpan')
                     this.getAllCategories()
-                }).catch((err) => console.error(err))
-            } else {
-                alert('Data sudah ada')
-                this.showToast('Data sudah ada')
+                }).catch((err) => {
+                    this.requestSuccess = false
+                    this.showToast(`Terjadi kesalahan: ${err}`)
+                })
             }
         },
-        async hasDuplicate(data, category) {
-            let q = collection(db, category)
-
-            for (const [field, value] of Object.entries(data)) {
-                q = query(q, where(field, '==', value))
+        hasDuplicate(value, categoryName, field) {
+            for (let i = 0; i < this.categories[categoryName].length; i++) {
+                if (this.categories[categoryName][i][field] === value) {
+                    return true
+                }
+                return false
             }
-
-            const querySnapshot = await getDocs(q)
-            const results = []
-            querySnapshot.forEach(doc => {
-                results.push({ ...doc.data() })
-            })
-            console.log(results)
-            return results.length > 0 ? true : false
         },
         editRow(row) {
             console.log(row)
@@ -505,7 +509,7 @@ export default {
         showToast(message) {
             this.toastMessage = message
             const toastEl = this.$refs.toastEl
-            this.toastInstance = new bootstrap.Toast(toastEl)
+            this.toastInstance = new Toast(toastEl)
             this.toastInstance.show()
         },
         hideToast() {
