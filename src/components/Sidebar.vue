@@ -4,22 +4,22 @@
             <!-- semua -->
             <li class="nav-item">
                 <router-link class="nav-link text-white d-flex gap-2" active-class="active bg-primary rounded" exact to="/">
-                    <i class="bi bi-pie-chart-fill"></i>Beranda
+                    <i class="bi bi-house"></i>Beranda
                 </router-link>
             </li>
             <!-- buat admin -->
             <li class="nav-item">
                 <router-link class="nav-link text-white d-flex gap-2" active-class="active bg-primary rounded" exact to="/pengaturan-kategori">
-                    <i class="bi bi-pie-chart-fill"></i>Pengaturan Kategori
+                    <i class="bi bi-gear"></i>Pengaturan Kategori
                 </router-link>
                 <router-link class="nav-link text-white d-flex gap-2" active-class="active bg-primary rounded" exact to="/pengaturan-kuesioner">
-                    <i class="bi bi-pie-chart-fill"></i>Pengaturan Kuesioner
+                    <i class="bi bi-gear"></i>Pengaturan Kuesioner
                 </router-link>
             </li>
             <!-- buat auditor -->
             <li class="nav-item">
                 <router-link class="nav-link text-white d-flex gap-2" active-class="active bg-primary rounded" exact to="/isi-kuesioner">
-                    <i class="bi bi-pie-chart-fill"></i>Isi Kuesioner
+                    <i class="bi bi-pencil-square"></i>Isi Kuesioner
                 </router-link>
             </li>
         </ul>

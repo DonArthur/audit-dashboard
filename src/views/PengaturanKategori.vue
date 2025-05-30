@@ -140,21 +140,47 @@
             </div>
         </div>
         <div class="modal fade" id="addModal">
-            <div class="modal-dialog" role="document">
+            <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
                         <span>TAMBAH {{ title }}</span>
                     </div>
                     <div class="modal-body">
                         <form class="user">
-                            <input type="text" class="form-control form-control-user border-primary"
-                            id="namaDirektorat" placeholder="Masukkan Nama Direktorat" />
+                            <input
+                                type="text"
+                                v-if="title === 'DIREKTORAT'"
+                                class="form-control form-control-user border-primary"
+                                id="namaDirektorat"
+                                placeholder="Masukkan Nama Direktorat"
+                                v-model="form_direktorat.nama_direktorat"
+                            />
                         </form>
                     </div>
                     <div class="modal-footer">
-                        <button class="btn bg-primary text-white rounded">SIMPAN</button>
+                        <button
+                            :class="`btn bg-${computedDisabledSave ? 'secondary' : 'primary'} text-white rounded`"
+                            :disabled="computedDisabledSave"
+                            @click="confirmSave"
+                        >
+                            SIMPAN
+                        </button>
                     </div>
                 </div>
+            </div>
+        </div>
+        <div
+            class="toast align-items-center text-bg-success border-0 position-fixed bottom-0 end-0 m-3"
+            role="alert"
+            aria-live="assertive"
+            aria-atomic="true"
+            ref="toastEl"
+            >
+            <div class="d-flex">
+                <div class="toast-body">
+                {{ toastMessage }}
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" @click="hideToast"></button>
             </div>
         </div>
     </div>
@@ -164,7 +190,7 @@ import { Modal } from 'bootstrap';
 import 'vue-good-table-next/dist/vue-good-table-next.css'
 import { VueGoodTable } from 'vue-good-table-next'
 import { db } from '../../firebaseConfig';
-import { collection, getDocs, addDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, orderBy, limit, getDoc, where } from 'firebase/firestore';
 
 export default {
     name: 'PengaturanKategori',
@@ -182,6 +208,8 @@ export default {
                 sub_klausa: [],
             },
             title: '',
+            toastMessage: '',
+            toastInstance: null,
             kolom_direktorat: [
                 {
                     label: 'No.',
@@ -282,17 +310,81 @@ export default {
                     type: 'slot',
                 },
             ],
+            form_direktorat: {
+                id: null,
+                nama_direktorat: ''
+            },
+            form_klausa: {
+                id: null,
+                nama_klausa: '',
+            },
+            form_sub_klausa: {
+                id: null,
+                nama_sub_klausa: '',
+            },
+            form_annex: {
+                id: null,
+                nama_annex: '',
+            },
+            form_kontrol: {
+                id: null,
+                nama_sub_control: '',
+            },
+            form_skor: {
+                min: null,
+                max: null,
+                nama_kategori: '',
+            },
         }
     },
-    async mounted() {
-        this.getCategoryData('annex')
-        this.getCategoryData('direktorat')
-        this.getCategoryData('kategori_skor')
-        this.getCategoryData('klausa')
-        this.getCategoryData('sub_control')
-        this.getCategoryData('sub_klausa')
+    mounted() {
+        this.getAllCategories()
+    },
+    computed: {
+        computedDisabledSave() {
+            let status = false
+            switch (this.title) {
+                case 'DIREKTORAT':
+                    status = this.form_direktorat.nama_direktorat.length === 0
+                    break
+                case 'KLAUSUL':
+                    status = this.form_klausa.nama_klausa.length === 0
+                    break
+                case 'SUB-KLAUSUL':
+                    status = this.form_sub_klausa.nama_sub_klausa.length === 0
+                    break
+                case 'ANNEX':
+                    status = this.form_annex.nama_annex.length === 0
+                    break
+                case 'KONTROL':
+                    status = this.form_kontrol.nama_sub_control.length === 0
+                    break
+                case 'SKOR':
+                    status = this.form_skor.max < 0 && 
+                        (this.form_skor.min < 0 || this.form_skor.min > this.form_skor.max) || 
+                        this.form_skor.nama_kategori.length === 0
+                    break
+                default:
+                    break
+            }
+            return status
+        },
     },
     methods: {
+        getAllCategories() {
+            this.getCategoryData('annex')
+            this.getLastId('annex')
+            this.getCategoryData('direktorat')
+            this.getLastId('direktorat')
+            this.getCategoryData('kategori_skor')
+            this.getLastId('kategori_skor')
+            this.getCategoryData('klausa')
+            this.getLastId('klausa')
+            this.getCategoryData('sub_control')
+            this.getLastId('sub_control')
+            this.getCategoryData('sub_klausa')
+            this.getLastId('sub_klausa')
+        },
         openAddModal(text) {
             this.title = text
             const modalEl = document.getElementById('addModal')
@@ -303,24 +395,123 @@ export default {
             const querySnapShot = await getDocs(collection(db, category))
             this.categories[category] = querySnapShot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         },
-        async addQuestion() {
-            const newQuestion = {
-                annex_id: 0,
-                direktorat_id: 1,
-                klausa_id: 4,
-                pertanyaan: 'Tes tambah pertanyaan',
-                sub_control_id: 0,
-                sub_klausa_id: 1
+        async getLastId(category) {
+            const colRef = collection(db, category)
+            const q = query(colRef, orderBy('id', 'desc'), limit(1))
+            try {
+                const querySnapshot = await getDocs(q)
+                if (!querySnapshot.empty) {
+                    const doc = querySnapshot.docs[0]
+                    const data = doc.data()
+                    if (data.id) {
+                        switch (category) {
+                            case 'annex':
+                                this.form_annex.id = data.id + 1
+                                break
+                            case 'direktorat':
+                                this.form_direktorat.id = data.id + 1
+                                break
+                            case 'klausa':
+                                this.form_klausa.id = data.id + 1
+                                break
+                            case 'sub-control':
+                                this.form_kontrol.id = data.id + 1
+                                break
+                            case 'sub_klausa':
+                                this.form_sub_klausa.id = data.id + 1
+                                break
+                            default:
+                                break
+                        }
+                    }
+                } else {
+                    console.error('No documents found')
+                }
+            } catch (error) {
+                console.error(error)
             }
-            await addDoc(collection(db, 'pertanyaan'), newQuestion).then(() => {
-                this.getQuestion()
-            }).catch((err) => console.error(err))
+        },
+        async addCategory() {
+            let category = ''
+            let newData = null
+            switch (this.title) {
+                case 'DIREKTORAT':
+                    category = 'direktorat'
+                    newData = this.form_direktorat
+                    this.form_direktorat = { id: newData.id + 1, nama_direktorat: '' }
+                    break
+                case 'KLAUSUL':
+                    category = klausa
+                    newData = this.form_klausa
+                    this.form_klausa = { id: newData.id + 1, nama_klausa: '' }
+                    break
+                case 'SUB-KLAUSUL':
+                    category = 'sub_klausa'
+                    newData = this.form_sub_klausa
+                    this.form_sub_klausa = { id: newData.id, nama_sub_klausa: '' }
+                    break
+                case 'ANNEX':
+                    category = annex
+                    newData = this.form_annex
+                    this.form_annex = { id: newData.id, nama_annex: '' }
+                    break
+                case 'KONTROL':
+                    category = 'sub_control'
+                    newData = this.form_kontrol
+                    this.form_kontrol = { id: newData.id, nama_sub_control: '' }
+                    break
+                case 'SKOR':
+                    category = 'kategori_skor'
+                    newData = this.form_skor
+                    this.form_skor = { max: null, min: null, nama_kategori: '' }
+                    break
+                default:
+                    break
+            }
+            if (!this.hasDuplicate(newData, category)) {
+                this.showToast('Aman')
+                await addDoc(collection(db, category), newData).then(() => {
+                    const addModalEl = document.getElementById('addModal')
+                    const addModal = Modal.getInstance(addModalEl) || new Modal(addModalEl)
+                    addModal.hide()
+                    this.getAllCategories()
+                }).catch((err) => console.error(err))
+            } else {
+                alert('Data sudah ada')
+                this.showToast('Data sudah ada')
+            }
+        },
+        async hasDuplicate(data, category) {
+            let q = collection(db, category)
+
+            for (const [field, value] of Object.entries(data)) {
+                q = query(q, where(field, '==', value))
+            }
+
+            const querySnapshot = await getDocs(q)
+            const results = []
+            querySnapshot.forEach(doc => {
+                results.push({ ...doc.data() })
+            })
+            console.log(results)
+            return results.length > 0 ? true : false
         },
         editRow(row) {
             console.log(row)
         },
         deleteRow(row) {
             console.log(row)
+        },
+        showToast(message) {
+            this.toastMessage = message
+            const toastEl = this.$refs.toastEl
+            this.toastInstance = new bootstrap.Toast(toastEl)
+            this.toastInstance.show()
+        },
+        hideToast() {
+            if (this.toastInstance) {
+            this.toastInstance.hide()
+            }
         },
     },
 }
