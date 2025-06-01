@@ -155,6 +155,38 @@
                                 placeholder="Masukkan Nama Direktorat"
                                 v-model="form_direktorat.nama_direktorat"
                             />
+                            <input
+                                type="text"
+                                v-if="title === 'KLAUSUL'"
+                                class="form-control form-control-user border-primary"
+                                id="namaKlausa"
+                                placeholder="Masukkan Nama Klausul"
+                                v-model="form_klausa.nama_klausa"
+                            />
+                            <input
+                                type="text"
+                                v-if="title === 'SUB-KLAUSUL'"
+                                class="form-control form-control-user border-primary"
+                                id="namaSubKlausa"
+                                placeholder="Masukkan Nama Sub-Klausul"
+                                v-model="form_sub_klausa.nama_sub_klausa"
+                            />
+                            <input
+                                type="text"
+                                v-if="title === 'ANNEX'"
+                                class="form-control form-control-user border-primary"
+                                id="namaAnnex"
+                                placeholder="Masukkan Nama Annex"
+                                v-model="form_annex.nama_annex"
+                            />
+                            <input
+                                type="text"
+                                v-if="title === 'KONTROL'"
+                                class="form-control form-control-user border-primary"
+                                id="namaKontrol"
+                                placeholder="Masukkan Nama Kontrol"
+                                v-model="form_kontrol.nama_sub_control"
+                            />
                         </form>
                     </div>
                     <div class="modal-footer">
