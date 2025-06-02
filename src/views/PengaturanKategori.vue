@@ -17,8 +17,8 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('DIREKTORAT', props.row, 'direktorat')">Edit</button>
-                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('DIREKTORAT', props.row, 'direktorat')">Ubah</button>
+                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row, 'direktorat')">Hapus</button>
                         </span>
                     </template>
                 </vue-good-table>
@@ -40,8 +40,8 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('KLAUSUL', props.row, 'klausa')">Edit</button>
-                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('KLAUSUL', props.row, 'klausa')">Ubah</button>
+                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row, 'klausa')">Hapus</button>
                         </span>
                     </template>
                 </vue-good-table>
@@ -63,8 +63,8 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('SUB-KLAUSUL', props.row, 'sub_klausa')">Edit</button>
-                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('SUB-KLAUSUL', props.row, 'sub_klausa')">Ubah</button>
+                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row, 'sub_klausa')">Hapus</button>
                         </span>
                     </template>
                 </vue-good-table>
@@ -86,8 +86,8 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('ANNEX', props.row, 'annex')">Edit</button>
-                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('ANNEX', props.row, 'annex')">Ubah</button>
+                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row, 'annex')">Hapus</button>
                         </span>
                     </template>
                 </vue-good-table>
@@ -109,8 +109,8 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('KONTROL', props.row, 'sub_control')">Edit</button>
-                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('KONTROL', props.row, 'sub_control')">Ubah</button>
+                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row, 'sub_control')">Hapus</button>
                         </span>
                     </template>
                 </vue-good-table>
@@ -132,8 +132,8 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('SKOR', props.row, 'kategori_skor')">Edit</button>
-                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('SKOR', props.row, 'kategori_skor')">Ubah</button>
+                            <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row, 'kategori_skor')">Hapus</button>
                         </span>
                     </template>
                 </vue-good-table>
@@ -201,6 +201,36 @@
                 </div>
             </div>
         </div>
+        <div class="modal fade" id="confirmDeleteModal">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <span>KONFIRMASI PENGHAPUSAN DATA</span>
+                    </div>
+                    <div class="modal-body">
+                        <p>Apakah Anda yakin ingin menghapus data ini?</p>
+                        <div v-if="dataToDelete">
+                            <span>ID: {{ dataToDelete.id }}</span><br />
+                            <span>Data: {{ dataToDelete.nama_direktorat || 
+                                dataToDelete.nama_annex || 
+                                dataToDelete.nama_kategori || 
+                                dataToDelete.nama_klausa || 
+                                dataToDelete.nama_sub_control || 
+                                dataToDelete.nama_sub_klausa }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button
+                            class="btn bg-danger text-white rounded"
+                            @click="confirmDelete"
+                        >
+                            KONFIRMASI
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div
             :class="`toast align-items-center ${requestSuccess ? 'text-bg-primary' : 'text-bg-danger'} border-0 position-fixed top-0 start-50 translate-middle-x m-3`"
             role="alert"
@@ -222,7 +252,7 @@ import { Modal, Toast } from 'bootstrap';
 import 'vue-good-table-next/dist/vue-good-table-next.css'
 import { VueGoodTable } from 'vue-good-table-next'
 import { db } from '../../firebaseConfig';
-import { collection, getDocs, addDoc, query, orderBy, limit, getDoc, where, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, orderBy, limit, getDoc, where, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export default {
     name: 'PengaturanKategori',
@@ -370,6 +400,8 @@ export default {
             },
             isEditMode: false,
             editDocId: null,
+            dataToDelete: null,
+            categoryToDelete: null,
         }
     },
     mounted() {
@@ -561,11 +593,26 @@ export default {
             // }
             return duplicate
         },
-        editRow() {
-            // const docRef = doc(db,)
+        deleteRow(row, category) {
+            this.dataToDelete = row
+            this.categoryToDelete = category
+            const modalEl = document.getElementById('confirmDeleteModal')
+            const modal = new Modal(modalEl)
+            modal.show()
         },
-        deleteRow(row) {
-            console.log(row)
+        async confirmDelete() {
+            const docRef = doc(db, this.categoryToDelete, this.dataToDelete.docId)
+            await deleteDoc(docRef).then(() => {
+                const confirmDeleteModalEl = document.getElementById('confirmDeleteModal')
+                const confirmDeleteModal = Modal.getInstance(confirmDeleteModalEl) || new Modal(confirmDeleteModalEl)
+                confirmDeleteModal.hide()
+                this.requestSuccess = true
+                this.showToast('Data berhasil dihapus')
+                this.getAllCategories()
+            }).catch((err) => {
+                this.requestSuccess = false
+                this.showToast(`Terjadi kesalahan: ${err}`)
+            })
         },
         showToast(message) {
             this.toastMessage = message
