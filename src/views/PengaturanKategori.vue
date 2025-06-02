@@ -17,7 +17,7 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="editRow(props.row)">Edit</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('DIREKTORAT', props.row, 'direktorat')">Edit</button>
                             <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
                         </span>
                     </template>
@@ -40,7 +40,7 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="editRow(props.row)">Edit</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('KLAUSUL', props.row, 'klausa')">Edit</button>
                             <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
                         </span>
                     </template>
@@ -63,7 +63,7 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="editRow(props.row)">Edit</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('SUB-KLAUSUL', props.row, 'sub_klausa')">Edit</button>
                             <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
                         </span>
                     </template>
@@ -86,7 +86,7 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="editRow(props.row)">Edit</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('ANNEX', props.row, 'annex')">Edit</button>
                             <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
                         </span>
                     </template>
@@ -109,7 +109,7 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="editRow(props.row)">Edit</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('KONTROL', props.row, 'sub_control')">Edit</button>
                             <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
                         </span>
                     </template>
@@ -132,7 +132,7 @@
                 >
                     <template #table-row="props">
                         <span v-if="props.column.field === 'actions'">
-                            <button class="btn bg-primary text-white rounded me-2" @click="editRow(props.row)">Edit</button>
+                            <button class="btn bg-primary text-white rounded me-2" @click="openEditModal('SKOR', props.row, 'kategori_skor')">Edit</button>
                             <button class="btn bg-danger text-white rounded" @click="deleteRow(props.row)">Delete</button>
                         </span>
                     </template>
@@ -143,7 +143,7 @@
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <span>TAMBAH {{ title }}</span>
+                        <span>{{isEditMode ? 'UBAH' : 'TAMBAH'}} {{ title }}</span>
                     </div>
                     <div class="modal-body">
                         <form class="user">
@@ -185,7 +185,7 @@
                                 class="form-control form-control-user border-primary"
                                 id="namaKontrol"
                                 placeholder="Masukkan Nama Kontrol"
-                                v-model="form_kontrol.nama_sub_control"
+                                v-model="form_sub_control.nama_sub_control"
                             />
                         </form>
                     </div>
@@ -222,7 +222,7 @@ import { Modal, Toast } from 'bootstrap';
 import 'vue-good-table-next/dist/vue-good-table-next.css'
 import { VueGoodTable } from 'vue-good-table-next'
 import { db } from '../../firebaseConfig';
-import { collection, getDocs, addDoc, query, orderBy, limit, getDoc, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, query, orderBy, limit, getDoc, where, doc, updateDoc } from 'firebase/firestore';
 
 export default {
     name: 'PengaturanKategori',
@@ -359,15 +359,17 @@ export default {
                 id: null,
                 nama_annex: '',
             },
-            form_kontrol: {
+            form_sub_control: {
                 id: null,
                 nama_sub_control: '',
             },
-            form_skor: {
+            kategori_skor: {
                 min: null,
                 max: null,
                 nama_kategori: '',
             },
+            isEditMode: false,
+            editDocId: null,
         }
     },
     mounted() {
@@ -390,12 +392,12 @@ export default {
                     status = this.form_annex.nama_annex.length === 0
                     break
                 case 'KONTROL':
-                    status = this.form_kontrol.nama_sub_control.length === 0
+                    status = this.form_sub_control.nama_sub_control.length === 0
                     break
                 case 'SKOR':
-                    status = this.form_skor.max < 0 && 
-                        (this.form_skor.min < 0 || this.form_skor.min > this.form_skor.max) || 
-                        this.form_skor.nama_kategori.length === 0
+                    status = this.kategori_skor.max < 0 && 
+                        (this.kategori_skor.min < 0 || this.kategori_skor.min > this.kategori_skor.max) || 
+                        this.kategori_skor.nama_kategori.length === 0
                     break
                 default:
                     break
@@ -424,9 +426,21 @@ export default {
             const modal = new Modal(modalEl)
             modal.show()
         },
+        openEditModal(text, data, category) {
+            this.title = text
+            this.isEditMode = true
+            const dataToEdit = this.categories[category].filter(item => item.docId === data.docId)
+            const formName = 'form_' + category
+            this.editDocId = dataToEdit[0].docId
+            delete dataToEdit[0].docId
+            this[formName] = dataToEdit[0]
+            const modalEl = document.getElementById('addModal')
+            const modal = new Modal(modalEl)
+            modal.show()
+        },
         async getCategoryData(category) {
             const querySnapShot = await getDocs(collection(db, category))
-            this.categories[category] = querySnapShot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+            this.categories[category] = querySnapShot.docs.map(doc => ({ docId: doc.id, ...doc.data() }))
         },
         async getLastId(category) {
             const colRef = collection(db, category)
@@ -448,7 +462,7 @@ export default {
                                 this.form_klausa.id = data.id + 1
                                 break
                             case 'sub-control':
-                                this.form_kontrol.id = data.id + 1
+                                this.form_sub_control.id = data.id + 1
                                 break
                             case 'sub_klausa':
                                 this.form_sub_klausa.id = data.id + 1
@@ -495,14 +509,14 @@ export default {
                     break
                 case 'KONTROL':
                     category = 'sub_control'
-                    newData = this.form_kontrol
+                    newData = this.form_sub_control
                     isDuplicate = this.hasDuplicate(newData.nama_sub_control, 'sub_control', 'nama_sub_control')
-                    this.form_kontrol = { id: newData.id, nama_sub_control: '' }
+                    this.form_sub_control = { id: newData.id, nama_sub_control: '' }
                     break
                 case 'SKOR':
                     category = 'kategori_skor'
-                    newData = this.form_skor
-                    this.form_skor = { max: null, min: null, nama_kategori: '' }
+                    newData = this.kategori_skor
+                    this.kategori_skor = { max: null, min: null, nama_kategori: '' }
                     break
                 default:
                     break
@@ -511,6 +525,20 @@ export default {
                 this.requestSuccess = false
                 this.showToast('Data sudah ada')
             } else {
+                if (this.isEditMode) {
+                    const docRef = doc(collection(db, category), this.editDocId)
+                    await updateDoc(docRef, newData).then(() => {
+                        const addModalEl = document.getElementById('addModal')
+                        const addModal = Modal.getInstance(addModalEl) || new Modal(addModalEl)
+                        addModal.hide()
+                        this.requestSuccess = true
+                        this.showToast('Data berhasil diubah')
+                        this.getAllCategories()
+                    }).catch((err) => {
+                        this.requestSuccess = false
+                        this.showToast(`Terjadi kesalahan: ${err}`)
+                    })
+                }
                 await addDoc(collection(db, category), newData).then(() => {
                     const addModalEl = document.getElementById('addModal')
                     const addModal = Modal.getInstance(addModalEl) || new Modal(addModalEl)
@@ -525,15 +553,16 @@ export default {
             }
         },
         hasDuplicate(value, categoryName, field) {
-            for (let i = 0; i < this.categories[categoryName].length; i++) {
-                if (this.categories[categoryName][i][field] === value) {
-                    return true
-                }
-                return false
-            }
+            let duplicate = false
+            // for (let i = 0; i < this.categories[categoryName].length; i++) {
+            //     if (this.categories[categoryName][i][field] === value) {
+            //         duplicate = true
+            //     }
+            // }
+            return duplicate
         },
-        editRow(row) {
-            console.log(row)
+        editRow() {
+            // const docRef = doc(db,)
         },
         deleteRow(row) {
             console.log(row)
