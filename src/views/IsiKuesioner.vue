@@ -3,20 +3,28 @@
         <h3 class="mb-4">ISI KUESIONER</h3>
         <div class="card shadow mb-4 p-3">
             <form class="d-flex flex-column gap-2 align-items-start">
-                <label for="direktorat_id">Pilih direktorat</label>
-                <select v-model="currDirektorat">
+                <label for="direktorat_id" class="form-label">Pilih direktorat</label>
+                <select v-model="currDirektorat" class="form-select w-50">
                     <option v-for="(item) in direktorat" :key="item.docId" :value="item">{{ item.nama_direktorat }}</option>
                 </select>
-                <button class="btn btn-primary" @click="(e) => getQuestions(e)">Isi Pertanyaan</button>
+                <button class="btn btn-primary" @click="(e) => getQuestions(e)" :disabled="!currDirektorat">Isi Pertanyaan</button>
             </form>
         </div>
         <div class="card shadow mb-4 p-3" v-if="currDirektorat && pertanyaan.length > 0">
-            <div v-for="(item, index) in pertanyaan" :key="item.id">
-                <span>{{ index + 1 }}. &nbsp;</span>{{ item.pertanyaan }}
+            <div v-for="(item, index) in pertanyaan" class="mb-2" :key="item.id">
+                <span>{{ item.pertanyaan }}</span><br />
+                <input type="radio" :name="item.pertanyaan" id="true" :value="true" v-model="pertanyaan[index].jawaban">
+                <label for="true" class="mx-2">Ya</label>
+                <input type="radio" :name="item.pertanyaan" id="false" :value="false" v-model="pertanyaan[index].jawaban">
+                <label for="false" class="mx-2">Tidak</label>
             </div>
+            <button class="btn btn-primary" @click="(e) => submitForm(e)">Submit</button>
+        </div>
+        <div v-else-if="currDirektorat">
+            Belum ada pertanyaan
         </div>
         <div v-else>
-            Belum ada pertanyaan
+            Silakan pilih direktorat
         </div>
     </div>
 </template>
@@ -47,6 +55,10 @@ export default {
             const q = query(colRef, where('direktorat_id', '==', this.currDirektorat.id))
             const querySnapshot = await getDocs(q)
             this.pertanyaan = querySnapshot.docs.map(doc => ({ docId: doc.id, ...doc.data() }))
+        },
+        submitForm(e) {
+            e.preventDefault()
+            console.log(this.pertanyaan)
         },
     },
 }
