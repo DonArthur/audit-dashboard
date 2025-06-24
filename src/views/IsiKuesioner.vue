@@ -18,7 +18,7 @@
                 <input type="radio" :name="item.pertanyaan" id="false" :value="false" v-model="pertanyaan[index].jawaban">
                 <label for="false" class="mx-2">Tidak</label>
             </div>
-            <button class="btn btn-primary" @click="(e) => submitForm(e)">Submit</button>
+            <button class="btn btn-primary" @click="(e) => submitForm(e)">Kirim</button>
         </div>
         <div v-else-if="currDirektorat">
             Belum ada pertanyaan
