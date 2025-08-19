@@ -16,6 +16,18 @@ export default {
     return {
       chart: null,
       direktorat: [],
+      colors: [
+        "#00809D",
+        "#FCF8DD",
+        "#FFD700",
+        "#D3AF37",
+        "#E4004B",
+        "#ED775A",
+        "#FAD691",
+        "#C9CDCF",
+        "#33A1E0",
+        "#7A85C1",
+      ],
     };
   },
   methods: {
@@ -34,7 +46,7 @@ export default {
         arr.push(e.nama_direktorat);
       });
 
-      console.log(arr);
+      arr = [...new Set(arr)];
 
       this.chart = new Chart(ctx, {
         type: "doughnut",
@@ -47,10 +59,7 @@ export default {
                 { length: arr.length },
                 () => Math.floor(Math.random() * 50) + 1
               ),
-              backgroundColor: Array.from(
-                { length: arr.length },
-                () => `hsl(${Math.floor(Math.random() * 360)}, 70%, 60%)`
-              ),
+              backgroundColor: this.colors,
               hoverOffset: 4,
             },
           ],

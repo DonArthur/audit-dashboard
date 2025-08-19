@@ -2,8 +2,8 @@
   <div class="home">
     <h3>BERANDA</h3>
     <div class="card-container">
-      <div v-for="item in direktorat" :key="item.docId" class="card">
-        {{ item.nama_direktorat }}
+      <div v-for="item in direktorat" :key="item" class="card">
+        {{ item }}
       </div>
     </div>
     <!-- <div>
@@ -33,10 +33,12 @@ export default {
   methods: {
     async getDirectorates() {
       const qSnapshot = await getDocs(collection(db, "direktorat"));
-      this.direktorat = qSnapshot.docs.map((doc) => ({
+      const data = qSnapshot.docs.map((doc) => ({
         docId: doc.id,
         ...doc.data(),
       }));
+      const arr = data.map((item) => item.nama_direktorat);
+      this.direktorat = [...new Set(arr)];
     },
   },
   mounted() {
@@ -63,22 +65,35 @@ export default {
   justify-content: center;
   color: #111;
 }
+
 .card:nth-child(6n + 1) {
-  background: #f8b400;
+  background: #00809d;
 }
 .card:nth-child(6n + 2) {
-  background: #ff6f61;
+  background: #fcf8dd;
 }
 .card:nth-child(6n + 3) {
-  background: #6fcf97;
+  background: #ffd700;
 }
 .card:nth-child(6n + 4) {
-  background: #56ccf2;
+  background: #d3af37;
 }
 .card:nth-child(6n + 5) {
-  background: #bb6bd9;
+  background: #e4004b;
 }
 .card:nth-child(6n + 6) {
-  background: #f2994a;
+  background: #ed775a;
+}
+.card:nth-child(6n + 7) {
+  background: #fad691;
+}
+.card:nth-child(6n + 8) {
+  background: #c9cdcf;
+}
+.card:nth-child(6n + 9) {
+  background: #33a1e0;
+}
+.card:nth-child(6n + 10) {
+  background: #7a85c1;
 }
 </style>

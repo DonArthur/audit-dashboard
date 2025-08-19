@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h3 class="mb-4">ISI KUESIONER</h3>
+    <h3 class="mb-4">UBAH KUESIONER</h3>
     <div class="card shadow mb-4 p-3">
       <form class="d-flex flex-column gap-2 align-items-start">
         <label for="direktorat_id" class="form-label">Pilih direktorat</label>
@@ -12,7 +12,11 @@
         <label for="direktorat_id" class="form-label"
           >Tulis nama karyawan</label
         >
-        <input type="text" class="w-50" v-model="employeeName" />
+        <select v-model="currDirektorat" class="form-select w-50">
+          <option v-for="item in direktorat" :key="item.docId" :value="item">
+            {{ item.nama_direktorat }}
+          </option>
+        </select>
         <button
           class="btn btn-primary"
           @click="(e) => getQuestions(e)"

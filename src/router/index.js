@@ -22,6 +22,11 @@ const routes = [
     name: 'isi-kuesioner',
     component: () => import('../views/IsiKuesioner.vue')
   },
+  {
+    path: '/ubah-kuesioner',
+    name: 'ubah-kuesioner',
+    component: () => import('../views/UbahKuesioner.vue')
+  },
 ]
 
 const router = createRouter({
