@@ -26,37 +26,65 @@
       class="card shadow mb-4 p-3"
       v-if="currDirektorat && pertanyaan.length > 0"
     >
-      <div v-for="(item, index) in pertanyaan" class="mb-2" :key="item.id">
-        <span>{{ item.pertanyaan }}</span
-        ><br />
-        <input
-          type="radio"
-          :name="item.pertanyaan"
-          id="true"
-          :value="true"
-          v-model="pertanyaan[index].jawaban"
-        />
-        <label for="true" class="mx-2">Ya</label>
-        <input
-          type="radio"
-          :name="item.pertanyaan"
-          id="false"
-          :value="false"
-          v-model="pertanyaan[index].jawaban"
-        />
-        <label for="false" class="mx-2">Tidak</label>
+      <div
+        v-for="(item, index) in pertanyaan"
+        class="mb-2 d-flex flex-column"
+        :key="item.id"
+      >
+        <span>{{ item.pertanyaan }}</span>
+        <div>
+          <input
+            type="radio"
+            :name="item.pertanyaan"
+            id="true"
+            :value="true"
+            v-model="pertanyaan[index].jawaban"
+          />
+          <label for="true" class="mx-2">Ya</label>
+        </div>
+        <div>
+          <input
+            type="radio"
+            :name="item.pertanyaan"
+            id="false"
+            :value="false"
+            v-model="pertanyaan[index].jawaban"
+          />
+          <label for="false" class="mx-2">Tidak</label>
+        </div>
       </div>
-      <button class="btn btn-primary" @click="(e) => submitForm(e)">
+      <button class="btn btn-primary" @click="(e) => addEmployee(e)">
         Kirim
       </button>
     </div>
     <div v-else-if="currDirektorat">Belum ada pertanyaan</div>
     <div v-else>Silakan pilih direktorat</div>
+    <div
+      :class="`toast align-items-center ${
+        requestSuccess ? 'text-bg-primary' : 'text-bg-danger'
+      } border-0 position-fixed top-0 start-50 translate-middle-x m-3`"
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
+      ref="toastEl"
+    >
+      <div class="d-flex">
+        <div class="toast-body">
+          {{ toastMessage }}
+        </div>
+        <button
+          type="button"
+          class="btn-close btn-close-white me-2 m-auto"
+          @click="hideToast"
+        ></button>
+      </div>
+    </div>
   </div>
 </template>
 <script>
-import { collection, getDocs, query, where } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../../firebaseConfig";
+import { Modal, Toast } from "bootstrap";
 
 export default {
   name: "IsiKuesioner",
@@ -65,7 +93,11 @@ export default {
       direktorat: [],
       currDirektorat: null,
       employeeName: "",
+      employeeId: "",
       pertanyaan: [],
+      toastMessage: "",
+      requestSuccess: false,
+      toastInstance: null,
     };
   },
   mounted() {
@@ -78,6 +110,21 @@ export default {
         docId: doc.id,
         ...doc.data(),
       }));
+    },
+    async getSubs() {
+      let subConArr = [];
+      let subKlaArr = [];
+      this.pertanyaan.forEach((item) => {
+        if (item.sub_control_id !== 0) {
+          subConArr.push(item.sub_control_id);
+        } else if (item.sub_klausa_id !== 0) {
+          subKlaArr.push(item.sub_klausa_id);
+        }
+      });
+      const uniqueCon = [...new Set(subConArr)];
+      const uniqueKla = [...new Set(subKlaArr)];
+      console.log(uniqueCon);
+      console.log(uniqueKla);
     },
     async getQuestions(e) {
       e.preventDefault();
@@ -92,9 +139,79 @@ export default {
         ...doc.data(),
       }));
     },
-    submitForm(e) {
+    showToast(message) {
+      this.toastMessage = message;
+      const toastEl = this.$refs.toastEl;
+      this.toastInstance = new Toast(toastEl);
+      this.toastInstance.show();
+    },
+    hideToast() {
+      if (this.toastInstance) {
+        this.toastInstance.hide();
+      }
+    },
+    async getEmployee(e) {
+      const colRef = collection(db, "employee");
+      const q = query(
+        colRef,
+        where("direktorat_id", "==", this.currDirektorat.docId)
+      );
+      const querySnapshot = await getDocs(q);
+      const data = querySnapshot.docs.map((doc) => ({
+        docId: doc.id,
+        ...doc.data(),
+      }));
+      const filtered = data.filter((item) => item.name === this.employeeName);
+      this.employeeId = filtered[0].docId || "";
+      this.submitForm(e);
+    },
+    async addEmployee(e) {
+      let newData = {
+        direktorat_id: this.currDirektorat.docId,
+        name: this.employeeName,
+      };
+      console.log(newData);
+      await addDoc(collection(db, "employee"), newData)
+        .then(() => {
+          this.getEmployee(e);
+        })
+        .catch((err) => {
+          this.requestSuccess = false;
+          this.showToast(`Terjadi kesalahan: ${err}`);
+        });
+    },
+    async submitForm(e) {
       e.preventDefault();
       console.log(this.pertanyaan);
+      const newData = this.pertanyaan.map((item) => ({
+        annex_id: item.annex_id,
+        direktorat_id: this.currDirektorat.docId,
+        employee_id: this.employeeId,
+        jawaban: item.jawaban,
+        klausa_id: item.klausa_id,
+        question_id: item.docId,
+        session: 1,
+        sub_control_id: item.sub_control_id,
+        sub_klausa_id: item.sub_klausa_id,
+      }));
+      const colRef = collection(db, "hasil_pertanyaan");
+      await Promise.all(newData.map((item) => addDoc(colRef, item)));
+      this.requestSuccess = true;
+      this.showToast("Jawaban berhasil disimpan");
+      // await addDoc(collection(db, "hasil_pertanyaan"), newData)
+      //   .then(() => {
+      //     const addModalEl = document.getElementById("addModal");
+      //     const addModal =
+      //       Modal.getInstance(addModalEl) || new Modal(addModalEl);
+      //     addModal.hide();
+      //     this.requestSuccess = true;
+      //     this.showToast("Data berhasil disimpan");
+      //     this.getAllCategories();
+      //   })
+      //   .catch((err) => {
+      //     this.requestSuccess = false;
+      //     this.showToast(`Terjadi kesalahan: ${err}`);
+      //   });
     },
   },
 };

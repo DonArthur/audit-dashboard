@@ -3,7 +3,7 @@
     <h3>BERANDA</h3>
     <div class="card-container">
       <div v-for="item in direktorat" :key="item" class="card">
-        {{ item }}
+        {{ item.nama_direktorat }}
       </div>
     </div>
     <!-- <div>
@@ -28,6 +28,7 @@ export default {
   data() {
     return {
       direktorat: [],
+      hasil: [],
     };
   },
   methods: {
@@ -37,12 +38,22 @@ export default {
         docId: doc.id,
         ...doc.data(),
       }));
-      const arr = data.map((item) => item.nama_direktorat);
-      this.direktorat = [...new Set(arr)];
+      this.direktorat = data;
+    },
+    async getResults() {
+      const qSnapshot = await getDocs(collection(db, "hasil_pertanyaan"));
+      const data = qSnapshot.docs.map((doc) => ({
+        docId: doc.id,
+        ...doc.data(),
+      }));
+      // const arr = data.map((item) => item.nama_direktorat);
+      this.hasil = data;
+      console.log(this.hasil);
     },
   },
   mounted() {
     this.getDirectorates();
+    this.getResults();
   },
 };
 </script>

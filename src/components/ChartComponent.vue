@@ -12,6 +12,9 @@ import { db } from "../../firebaseConfig";
 
 export default {
   name: "ChartComponent",
+  // props: {
+  //   data,
+  // },
   data() {
     return {
       chart: null,
