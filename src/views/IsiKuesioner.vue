@@ -26,31 +26,37 @@
       class="card shadow mb-4 p-3"
       v-if="currDirektorat && pertanyaan.length > 0"
     >
-      <div
-        v-for="(item, index) in pertanyaan"
-        class="mb-2 d-flex flex-column"
-        :key="item.id"
-      >
-        <span>{{ item.pertanyaan }}</span>
-        <div>
-          <input
-            type="radio"
-            :name="item.pertanyaan"
-            id="true"
-            :value="true"
-            v-model="pertanyaan[index].jawaban"
-          />
-          <label for="true" class="mx-2">Ya</label>
-        </div>
-        <div>
-          <input
-            type="radio"
-            :name="item.pertanyaan"
-            id="false"
-            :value="false"
-            v-model="pertanyaan[index].jawaban"
-          />
-          <label for="false" class="mx-2">Tidak</label>
+      <div v-for="(sub, index) in subs" :key="index">
+        <b>{{ sub.nama_sub_klausa || sub.nama_sub_control }}</b>
+        <div v-for="(item, index) in pertanyaan" :key="item.id">
+          <div
+            class="mb-2 d-flex flex-column"
+            v-if="
+              item.sub_control_id === sub.id || item.sub_klausa_id === sub.id
+            "
+          >
+            <span>{{ item.pertanyaan }}</span>
+            <div>
+              <input
+                type="radio"
+                :name="item.pertanyaan"
+                id="true"
+                :value="true"
+                v-model="pertanyaan[index].jawaban"
+              />
+              <label for="true" class="mx-2">Ya</label>
+            </div>
+            <div>
+              <input
+                type="radio"
+                :name="item.pertanyaan"
+                id="false"
+                :value="false"
+                v-model="pertanyaan[index].jawaban"
+              />
+              <label for="false" class="mx-2">Tidak</label>
+            </div>
+          </div>
         </div>
       </div>
       <button class="btn btn-primary" @click="(e) => addEmployee(e)">
@@ -94,6 +100,7 @@ export default {
       currDirektorat: null,
       employeeName: "",
       employeeId: "",
+      subs: [],
       pertanyaan: [],
       toastMessage: "",
       requestSuccess: false,
@@ -123,8 +130,21 @@ export default {
       });
       const uniqueCon = [...new Set(subConArr)];
       const uniqueKla = [...new Set(subKlaArr)];
-      console.log(uniqueCon);
-      console.log(uniqueKla);
+      const collect = uniqueCon.length > 0 ? "sub_control" : "sub_klausa";
+      const arr = uniqueCon.length > 0 ? uniqueCon : uniqueKla;
+      const colRef = collection(db, collect);
+      const q = query(colRef, where(`id`, "in", arr));
+      const qSnapshot = await getDocs(q);
+      this.subs = qSnapshot.docs.map((doc) => ({
+        docId: doc.id,
+        ...doc.data(),
+      }));
+      this.subs = this.subs.sort((a, b) => {
+        const numA = parseFloat(a.nama_sub_klausa.split(" ")[0]); // "9.1" → 9.1
+        const numB = parseFloat(b.nama_sub_klausa.split(" ")[0]); // "10.1" → 10.1
+        return numA - numB;
+      });
+      console.log(this.subs);
     },
     async getQuestions(e) {
       e.preventDefault();
@@ -138,6 +158,9 @@ export default {
         docId: doc.id,
         ...doc.data(),
       }));
+      if (querySnapshot) {
+        this.getSubs();
+      }
     },
     showToast(message) {
       this.toastMessage = message;
