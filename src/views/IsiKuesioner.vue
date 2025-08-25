@@ -177,7 +177,8 @@ export default {
       const colRef = collection(db, "employee");
       const q = query(
         colRef,
-        where("direktorat_id", "==", this.currDirektorat.docId)
+        where("direktorat_id", "==", this.currDirektorat.docId),
+        where("name", "==", this.employeeName)
       );
       const querySnapshot = await getDocs(q);
       const data = querySnapshot.docs.map((doc) => ({
@@ -197,6 +198,7 @@ export default {
       await addDoc(collection(db, "employee"), newData)
         .then(() => {
           this.getEmployee(e);
+          // this.submitForm(e);
         })
         .catch((err) => {
           this.requestSuccess = false;
@@ -205,7 +207,6 @@ export default {
     },
     async submitForm(e) {
       e.preventDefault();
-      console.log(this.pertanyaan);
       const newData = this.pertanyaan.map((item) => ({
         annex_id: item.annex_id,
         direktorat_id: this.currDirektorat.docId,
@@ -218,9 +219,15 @@ export default {
         sub_klausa_id: item.sub_klausa_id,
       }));
       const colRef = collection(db, "hasil_pertanyaan");
-      await Promise.all(newData.map((item) => addDoc(colRef, item)));
-      this.requestSuccess = true;
-      this.showToast("Jawaban berhasil disimpan");
+      try {
+        await Promise.all(newData.map((item) => addDoc(colRef, item)));
+        this.requestSuccess = true;
+        this.showToast("Jawaban berhasil disimpan");
+      } catch (error) {
+        this.requestSuccess = false;
+        this.showToast(`Gagal menyimpan data ${error}`);
+      }
+
       // await addDoc(collection(db, "hasil_pertanyaan"), newData)
       //   .then(() => {
       //     const addModalEl = document.getElementById("addModal");

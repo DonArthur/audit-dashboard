@@ -2,15 +2,83 @@
   <div class="home">
     <h3>BERANDA</h3>
     <div class="card-container">
-      <div v-for="item in direktorat" :key="item" class="card">
+      <button
+        type="button"
+        v-for="item in direktorat"
+        :key="item"
+        class="card"
+        data-bs-toggle="modal"
+        data-bs-target="#exampleModal"
+        @click="setSelected(item)"
+      >
         {{ item.nama_direktorat }}
-      </div>
+      </button>
     </div>
-    <!-- <div>
-      Komponen Slideshow (di bawah kiri)
-    </div> -->
     <div>
       <ChartComponent />
+    </div>
+    <div
+      class="modal fade"
+      id="exampleModal"
+      tabindex="-1"
+      aria-labelledby="exampleModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLabel">
+              {{ selectedDir.nama_direktorat }}
+            </h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <div v-if="selectedData.length > 0">
+              {{ selectedData }}
+            </div>
+            <!-- <table
+              v-if="selectedData.length > 0"
+              class="table table-striped table-bordered"
+            >
+              <thead>
+                <tr>
+                  <th>Unit/Direktorat</th>
+                  <th>Nama Karyawan</th>
+                  <th>Skor</th>
+                  <th>Index Maturity</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(item, key) in selectedData" :key="key">
+                  <td>{{ item.direktorat_id }}</td>
+                  <td>{{ item.employee_id }}</td>
+                  <td>{{ item.jawaban }}</td>
+                  <td>Maturity</td>
+                </tr>
+              </tbody>
+            </table> -->
+            <div v-else>
+              <span>Belum mengisi kuesioner</span>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -29,6 +97,8 @@ export default {
     return {
       direktorat: [],
       hasil: [],
+      selectedDir: "",
+      selectedData: [],
     };
   },
   methods: {
@@ -49,6 +119,18 @@ export default {
       // const arr = data.map((item) => item.nama_direktorat);
       this.hasil = data;
       console.log(this.hasil);
+    },
+    setSelected(dir) {
+      console.log(dir);
+      this.selectedDir = dir;
+      const selected = this.hasil.filter(
+        (item) => item.direktorat_id === dir.docId
+      );
+      console.log(selected);
+      // this.selectedDir = dir.nama_direktorat;
+      // this.selectedData = this.hasil.filter(
+      //   (item) => item.direktorat_id === dir.docId
+      // );
     },
   },
   mounted() {
