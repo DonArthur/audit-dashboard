@@ -12,9 +12,7 @@ import { db } from "../../firebaseConfig";
 
 export default {
   name: "ChartComponent",
-  // props: {
-  //   data,
-  // },
+  props: ["dataHasil"],
   data() {
     return {
       chart: null,
@@ -33,6 +31,19 @@ export default {
       ],
     };
   },
+  watch: {
+    dataHasil: {
+      handler(newVal) {
+        if (newVal && newVal.length > 0) {
+          this.$nextTick(() => {
+            this.setCanvas();
+          });
+        }
+      },
+      immediate: true, // also runs at mount
+      deep: true,
+    },
+  },
   methods: {
     async getDirectorates() {
       const qSnapshot = await getDocs(collection(db, "direktorat"));
@@ -40,10 +51,30 @@ export default {
         docId: doc.id,
         ...doc.data(),
       }));
-      this.setCanvas();
+      this.$nextTick(() => {
+        this.setCanvas();
+      });
+    },
+    getResultPercentage(arr) {
+      let result = 0;
+      if (arr.length > 0) {
+        arr.forEach((item) => {
+          if (item.jawaban) {
+            result += 1;
+          }
+        });
+        return Math.round((result / arr.length) * 100);
+      } else {
+        return 0;
+      }
     },
     setCanvas() {
       const ctx = this.$refs.chartCanvas.getContext("2d");
+      console.log("dataHasil", this.dataHasil);
+      if (this.chart) {
+        this.chart.destroy();
+      }
+
       let arr = [];
       this.direktorat.forEach((e) => {
         arr.push(e.nama_direktorat);
@@ -51,17 +82,18 @@ export default {
 
       arr = [...new Set(arr)];
 
+      const values = this.dataHasil.map((item) =>
+        this.getResultPercentage(item.hasil)
+      );
+
       this.chart = new Chart(ctx, {
         type: "doughnut",
         data: {
           labels: arr,
           datasets: [
             {
-              label: "Random Data",
-              data: Array.from(
-                { length: arr.length },
-                () => Math.floor(Math.random() * 50) + 1
-              ),
+              label: "Hasil",
+              data: values,
               backgroundColor: this.colors,
               hoverOffset: 4,
             },

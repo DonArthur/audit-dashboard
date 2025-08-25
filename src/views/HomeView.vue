@@ -4,18 +4,18 @@
     <div class="card-container">
       <button
         type="button"
-        v-for="item in direktorat"
+        v-for="item in hasilDirektorat"
         :key="item"
         class="card"
         data-bs-toggle="modal"
         data-bs-target="#exampleModal"
         @click="setSelected(item)"
       >
-        {{ item.nama_direktorat }}
+        {{ item.nama_direktorat }} {{ getResultPercentage(item.hasil) }}
       </button>
     </div>
     <div>
-      <ChartComponent />
+      <ChartComponent :dataHasil="hasilDirektorat" />
     </div>
     <div
       class="modal fade"
@@ -97,6 +97,7 @@ export default {
     return {
       direktorat: [],
       hasil: [],
+      hasilDirektorat: [],
       selectedDir: "",
       selectedData: [],
     };
@@ -109,6 +110,7 @@ export default {
         ...doc.data(),
       }));
       this.direktorat = data;
+      console.log("direktorat", this.direktorat);
     },
     async getResults() {
       const qSnapshot = await getDocs(collection(db, "hasil_pertanyaan"));
@@ -116,12 +118,16 @@ export default {
         docId: doc.id,
         ...doc.data(),
       }));
-      // const arr = data.map((item) => item.nama_direktorat);
+      const dirArr = this.direktorat.map((item) => {
+        return {
+          nama_direktorat: item.nama_direktorat,
+          hasil: data.filter((ans) => ans.direktorat_id === item.docId),
+        };
+      });
       this.hasil = data;
-      console.log(this.hasil);
+      this.hasilDirektorat = dirArr;
     },
     setSelected(dir) {
-      console.log(dir);
       this.selectedDir = dir;
       const selected = this.hasil.filter(
         (item) => item.direktorat_id === dir.docId
@@ -131,6 +137,19 @@ export default {
       // this.selectedData = this.hasil.filter(
       //   (item) => item.direktorat_id === dir.docId
       // );
+    },
+    getResultPercentage(arr) {
+      let result = 0;
+      if (arr.length > 0) {
+        arr.forEach((item) => {
+          if (item.jawaban) {
+            result += 1;
+          }
+        });
+        return `${Math.round(result / arr.length) * 100}%`;
+      } else {
+        return "0%";
+      }
     },
   },
   mounted() {
