@@ -43,7 +43,7 @@
 
           <div class="modal-body">
             <table
-              v-if="selectedData.length > 0"
+              v-if="groupedResults.length > 0"
               class="table table-striped table-bordered"
             >
               <thead>
@@ -55,14 +55,11 @@
                 </tr>
               </thead>
               <tbody>
-                <tr
-                  v-for="(item, idx) in selectedData"
-                  :key="item.docId || idx"
-                >
+                <tr v-for="(item, idx) in groupedResults" :key="idx">
                   <td>{{ getDirectorateName(item.direktorat_id) }}</td>
-                  <td>{{ employeeNames[item.employee_id] || "Loading..." }}</td>
-                  <td>{{ item.jawaban ? "1" : "0" }}</td>
-                  <td>Maturity</td>
+                  <td>{{ item.name }}</td>
+                  <td>{{ item.result }}</td>
+                  <td>{{ item.category }}</td>
                 </tr>
               </tbody>
             </table>
@@ -100,10 +97,38 @@ export default {
       hasil: [],
       hasilDirektorat: [],
       selectedDir: {},
-      selectedData: [],
+      selectedData: [], // raw results for one directorate
       employees: [],
-      employeeNames: {}, // cache: employeeId -> name
+      employeeNames: {},
+      kategori_skor: [], // for category thresholds
     };
+  },
+  computed: {
+    // Build grouped results per employee
+    groupedResults() {
+      if (!this.selectedData.length) return [];
+
+      const grouped = {};
+
+      this.selectedData.forEach((item) => {
+        const name = this.employeeNames[item.employee_id] || "-";
+        if (!grouped[item.employee_id]) {
+          grouped[item.employee_id] = {
+            direktorat_id: item.direktorat_id,
+            name,
+            result: 0,
+          };
+        }
+        if (item.jawaban) {
+          grouped[item.employee_id].result += 1;
+        }
+      });
+
+      return Object.values(grouped).map((entry) => ({
+        ...entry,
+        category: this.getCategory(entry.result),
+      }));
+    },
   },
   methods: {
     // load directorates
@@ -136,7 +161,15 @@ export default {
       }
     },
 
-    // fetch all employees (to know which ids to preload)
+    async getCategories() {
+      const qSnapshot = await getDocs(collection(db, "kategori_skor"));
+      this.kategori_skor = qSnapshot.docs.map((d) => ({
+        docId: d.id,
+        ...d.data(),
+      }));
+    },
+
+    // fetch all employees
     async getEmployees() {
       const qSnapshot = await getDocs(collection(db, "employee"));
       this.employees = qSnapshot.docs.map((d) => ({
@@ -145,7 +178,6 @@ export default {
       }));
     },
 
-    // preload all employee names in parallel
     async preloadEmployeeNames() {
       if (!this.employees.length) return;
       const promises = this.employees.map((emp) =>
@@ -154,13 +186,11 @@ export default {
       await Promise.all(promises);
     },
 
-    // safe lookup for directorate name
     getDirectorateName(id) {
       const found = this.direktorat.find((dir) => dir.docId === id);
       return found ? found.nama_direktorat : id || "Unknown";
     },
 
-    // fetch hasil_pertanyaan and group by directorate
     async getResults() {
       const qSnapshot = await getDocs(collection(db, "hasil_pertanyaan"));
       const data = qSnapshot.docs.map((d) => ({
@@ -169,36 +199,27 @@ export default {
       }));
       this.hasil = data;
 
-      // Build hasilDirektorat array (one entry per directorate)
-      const dirArr = this.direktorat.map((item) => {
-        return {
-          nama_direktorat: item.nama_direktorat,
-          docId: item.docId,
-          hasil: data.filter((ans) => ans.direktorat_id === item.docId),
-        };
-      });
-      this.hasilDirektorat = dirArr;
+      this.hasilDirektorat = this.direktorat.map((item) => ({
+        nama_direktorat: item.nama_direktorat,
+        docId: item.docId,
+        hasil: data.filter((ans) => ans.direktorat_id === item.docId),
+      }));
     },
 
-    // invoked when user clicks a card button
     setSelected(dir) {
       this.selectedDir = dir || {};
-      // filter hasil by dir.docId
       this.selectedData = (this.hasil || []).filter(
         (item) => item.direktorat_id === dir.docId
       );
 
-      // preload employee names for the selectedData to speed template render
       const empIds = [
         ...new Set(this.selectedData.map((s) => s.employee_id)),
       ].filter(Boolean);
       if (empIds.length) {
-        // start fetching but don't block UI
         empIds.forEach((id) => this.getEmployeeName(id));
       }
     },
 
-    // keep returning "50%" style string for buttons
     getResultPercentage(arr) {
       let result = 0;
       if (!Array.isArray(arr) || arr.length === 0) return "0%";
@@ -208,15 +229,21 @@ export default {
       const percent = Math.round((result / arr.length) * 100);
       return `${percent}%`;
     },
-  },
 
-  // ensure proper load order: directorates -> results -> employees -> preload names
+    // categorization logic (can also load thresholds from kategori_skor)
+    getCategory(score) {
+      if (score >= 10) return "Maturity";
+      if (score >= 5) return "Growth";
+      return "Awareness";
+    },
+  },
   async mounted() {
     try {
       await this.getDirectorates();
       await this.getResults();
       await this.getEmployees();
       await this.preloadEmployeeNames();
+      await this.getCategories();
     } catch (err) {
       console.error("init error", err);
     }
