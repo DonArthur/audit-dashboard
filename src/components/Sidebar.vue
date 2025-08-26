@@ -35,7 +35,7 @@
         </router-link>
       </li>
       <!-- buat auditor -->
-      <li class="nav-item">
+      <!-- <li class="nav-item">
         <router-link
           class="nav-link text-white d-flex gap-2"
           active-class="active bg-primary rounded"
@@ -44,8 +44,8 @@
         >
           <i class="bi bi-pencil-square"></i>Isi Kuesioner
         </router-link>
-      </li>
-      <li class="nav-item">
+      </li> -->
+      <!-- <li class="nav-item">
         <router-link
           class="nav-link text-white d-flex gap-2"
           active-class="active bg-primary rounded"
@@ -54,7 +54,7 @@
         >
           <i class="bi bi-pencil-square"></i>Ubah Kuesioner
         </router-link>
-      </li>
+      </li> -->
     </ul>
   </nav>
 </template>
