@@ -82,9 +82,10 @@ export default {
 
       arr = [...new Set(arr)];
 
-      const values = this.dataHasil.map((item) =>
-        this.getResultPercentage(item.hasil)
-      );
+      // const values = this.dataHasil.map((item) =>
+      //   this.getResultPercentage(item.hasil)
+      // );
+      const values = [97, 96, 100, 95, 95, 100, 93, 90, 100];
 
       this.chart = new Chart(ctx, {
         type: "doughnut",

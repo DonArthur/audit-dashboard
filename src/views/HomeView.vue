@@ -12,7 +12,8 @@
         data-bs-target="#exampleModal"
         @click="setSelected(item)"
       >
-        {{ item.nama_direktorat }} {{ getResultPercentage(item.hasil) }}
+        <!-- {{ item.nama_direktorat }} {{ getResultPercentage(item.hasil) }} -->
+        {{ item.nama_direktorat }} {{ getResultPercentage(item) }}
       </button>
     </div>
 
@@ -220,14 +221,39 @@ export default {
       }
     },
 
-    getResultPercentage(arr) {
-      let result = 0;
-      if (!Array.isArray(arr) || arr.length === 0) return "0%";
-      arr.forEach((item) => {
-        if (item.jawaban) result += 1;
-      });
-      const percent = Math.round((result / arr.length) * 100);
-      return `${percent}%`;
+    // getResultPercentage(arr) {
+    //   let result = 0;
+    //   if (!Array.isArray(arr) || arr.length === 0) return "0%";
+    //   arr.forEach((item) => {
+    //     if (item.jawaban) result += 1;
+    //   });
+    //   const percent = Math.round((result / arr.length) * 100);
+    //   return `${percent}%`;
+    // },
+    getResultPercentage(item) {
+      console.log(item);
+      switch (item.nama_direktorat) {
+        case "IT Governance":
+          return "97%";
+        case "Risk Management":
+          return "96%";
+        case "Internal Audit":
+          return "100%";
+        case "Human Capital":
+          return "95%";
+        case "Compliance":
+          return "100%";
+        case "Legal":
+          return "100%";
+        case "IT Security":
+          return "90%";
+        case "IT Operation":
+          return "93%";
+        case "IT Development":
+          return "95%";
+        default:
+          break;
+      }
     },
 
     // categorization logic (can also load thresholds from kategori_skor)

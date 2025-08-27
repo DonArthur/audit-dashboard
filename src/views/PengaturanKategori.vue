@@ -419,10 +419,6 @@ export default {
       toastInstance: null,
       kolom_direktorat: [
         {
-          label: "No.",
-          field: "id",
-        },
-        {
           label: "Nama Direktorat",
           field: "nama_direktorat",
         },
@@ -433,10 +429,6 @@ export default {
         },
       ],
       kolom_klausa: [
-        {
-          label: "No.",
-          field: "id",
-        },
         {
           label: "Nama Klausul",
           field: "nama_klausa",
@@ -449,10 +441,6 @@ export default {
       ],
       kolom_sub_klausa: [
         {
-          label: "No.",
-          field: "id",
-        },
-        {
           label: "Nama Sub-Klausul",
           field: "nama_sub_klausa",
         },
@@ -463,10 +451,6 @@ export default {
         },
       ],
       kolom_annex: [
-        {
-          label: "No.",
-          field: "id",
-        },
         {
           label: "Nama Annex",
           field: "nama_annex",
@@ -479,10 +463,6 @@ export default {
       ],
       kolom_kontrol: [
         {
-          label: "No.",
-          field: "id",
-        },
-        {
           label: "Nama Kontrol",
           field: "nama_sub_control",
         },
@@ -493,10 +473,6 @@ export default {
         },
       ],
       kolom_skor: [
-        {
-          label: "No.",
-          field: "id",
-        },
         {
           label: "Skor Minimum",
           field: "min",
@@ -518,23 +494,18 @@ export default {
         },
       ],
       form_direktorat: {
-        id: null,
         nama_direktorat: "",
       },
       form_klausa: {
-        id: null,
         nama_klausa: "",
       },
       form_sub_klausa: {
-        id: null,
         nama_sub_klausa: "",
       },
       form_annex: {
-        id: null,
         nama_annex: "",
       },
       form_sub_control: {
-        id: null,
         nama_sub_control: "",
       },
       form_kategori_skor: {
@@ -586,17 +557,11 @@ export default {
   methods: {
     getAllCategories() {
       this.getCategoryData("annex");
-      this.getLastId("annex");
       this.getCategoryData("direktorat");
-      this.getLastId("direktorat");
       this.getCategoryData("kategori_skor");
-      this.getLastId("kategori_skor");
       this.getCategoryData("klausa");
-      this.getLastId("klausa");
       this.getCategoryData("sub_control");
-      this.getLastId("sub_control");
       this.getCategoryData("sub_klausa");
-      this.getLastId("sub_klausa");
     },
     openAddModal(text) {
       this.title = text;
@@ -625,42 +590,6 @@ export default {
         ...doc.data(),
       }));
     },
-    async getLastId(category) {
-      const colRef = collection(db, category);
-      const q = query(colRef, orderBy("id", "desc"), limit(1));
-      try {
-        const querySnapshot = await getDocs(q);
-        if (!querySnapshot.empty) {
-          const doc = querySnapshot.docs[0];
-          const data = doc.data();
-          if (data.id) {
-            switch (category) {
-              case "annex":
-                this.form_annex.id = data.id + 1;
-                break;
-              case "direktorat":
-                this.form_direktorat.id = data.id + 1;
-                break;
-              case "klausa":
-                this.form_klausa.id = data.id + 1;
-                break;
-              case "sub-control":
-                this.form_sub_control.id = data.id + 1;
-                break;
-              case "sub_klausa":
-                this.form_sub_klausa.id = data.id + 1;
-                break;
-              default:
-                break;
-            }
-          }
-        } else {
-          console.error("No documents found");
-        }
-      } catch (error) {
-        console.error(error);
-      }
-    },
     async addCategory() {
       let category = "";
       let newData = null;
@@ -674,7 +603,7 @@ export default {
             "direktorat",
             "nama_direktorat"
           );
-          this.form_direktorat = { id: newData.id + 1, nama_direktorat: "" };
+          this.form_direktorat = { nama_direktorat: "" };
           break;
         case "KLAUSUL":
           category = "klausa";
@@ -684,7 +613,7 @@ export default {
             "klausa",
             "nama_klausa"
           );
-          this.form_klausa = { id: newData.id + 1, nama_klausa: "" };
+          this.form_klausa = { nama_klausa: "" };
           break;
         case "SUB-KLAUSUL":
           category = "sub_klausa";
@@ -694,7 +623,7 @@ export default {
             "sub_klausa",
             "nama_sub_klausa"
           );
-          this.form_sub_klausa = { id: newData.id, nama_sub_klausa: "" };
+          this.form_sub_klausa = { nama_sub_klausa: "" };
           break;
         case "ANNEX":
           category = "annex";
@@ -704,7 +633,7 @@ export default {
             "annex",
             "nama_annex"
           );
-          this.form_annex = { id: newData.id, nama_annex: "" };
+          this.form_annex = { nama_annex: "" };
           break;
         case "KONTROL":
           category = "sub_control";
@@ -714,7 +643,7 @@ export default {
             "sub_control",
             "nama_sub_control"
           );
-          this.form_sub_control = { id: newData.id, nama_sub_control: "" };
+          this.form_sub_control = { nama_sub_control: "" };
           break;
         case "SKOR":
           category = "kategori_skor";
