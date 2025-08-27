@@ -17,8 +17,11 @@
       </button>
     </div>
 
-    <div>
-      <ChartComponent :dataHasil="hasilDirektorat" />
+    <div style="display: flex; align-items: center">
+      <div>
+        <ChartComponent :dataHasil="hasilDirektorat" />
+      </div>
+      <h2>Total Result = 96% (Optimised)</h2>
     </div>
 
     <div
